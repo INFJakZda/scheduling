@@ -77,7 +77,6 @@ class GeneticAlgorithm:
             
             # Selecting the best parents in the population for mating.
             parents_to_mate = np.argsort(pop_scores)[:self.num_parents_mating]
-            print(parents_to_mate)
             self.crossover(parents_to_mate, population)
 
             break # for testing
@@ -89,16 +88,18 @@ class GeneticAlgorithm:
         for k in range(self.offspring_size):
             # Indices of parents to mate.
             p1, p2 = parents_indices[k%num_parents], parents_indices[(k+1)%num_parents]
+            
             parent1 = population[p1, :]
             parent2 = population[p2, :]
-            print(parent1, parent2)
 
+            child = self.mateParents(parent1, parent2)
+            
             break # for testing
 
+    def mateParents(self, parent1, parent2):
+        binary_string = np.random.randint(2, size=len(parent1))
 
-
-
-
+        return None
 
 if __name__ == '__main__':
 
