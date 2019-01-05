@@ -48,13 +48,15 @@ class GeneticAlgorithm:
                     else:
                         for _ in range(noLines):
                             fp.readline()
-                arr.sort(key = lambda task: task[1] - task[2])
-                return np.asarray(arr, dtype=np.uint32)
+                helper = arr.copy()
+                helper.sort(key = lambda task: task[1] - task[2])
+                sorted_indexes = [ele[3] - 1 for ele in helper]
+                return np.asarray(arr, dtype=np.uint32), np.asarray(sorted_indexes, dtype=np.uint32)
 
         def calculateDueDate(tasks, h):
             return np.floor(np.sum(tasks[:, 0]) * h)
 
-        self.tasks = loadFromFile(n, k)
+        self.tasks, self.sorted_indexes = loadFromFile(n, k)
         self.dueDate = calculateDueDate(self.tasks, h)
         self.n = n #number of tasks
 
@@ -73,8 +75,9 @@ class GeneticAlgorithm:
     def initializePopulation(self):
         population = np.zeros(shape=(self.population_size, self.n),
             dtype=np.uint32)
-        for i in range(self.population_size):
+        for i in range(self.population_size - 1):
             population[i, :] = np.random.permutation(self.n)
+        population[self.population_size - 1, :] = self.sorted_indexes
         return population
 
     def search(self):
@@ -100,6 +103,7 @@ class GeneticAlgorithm:
             parents = population[parents_to_mate, :]
             population[:self.num_parents_mating, :] = parents
             population[self.num_parents_mating:, :] = new_offspring
+            print(self.calculatePenalty(best_so_far))
 
         return best_so_far
 
