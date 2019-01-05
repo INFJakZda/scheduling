@@ -31,7 +31,7 @@ class GeneticAlgorithm:
                     if (k == noInstance):
                         for idx in range(noLines):
                             ele = list(map(int, fp.readline().split()))
-                            ele.append(idx + 1)
+                            ele.append(idx+1)
                             arr.append(ele)
                         break
                     else:
@@ -68,6 +68,7 @@ class GeneticAlgorithm:
     def search(self):
         
         population = self.initializePopulation()
+
         for i in range(self.num_generations):
 
             # Measuring the fitness of each chromosome in the population.
@@ -75,11 +76,18 @@ class GeneticAlgorithm:
             for p in range(self.population_size):
                 pop_scores[p] = self.calculatePenalty(population[p, :])
             
+            print(np.sort(pop_scores))
             # Selecting the best parents in the population for mating.
             parents_to_mate = np.argsort(pop_scores)[:self.num_parents_mating]
-            self.crossover(parents_to_mate, population)
+            new_offspring = self.crossover(parents_to_mate, population)
+            
+            '''
+            Here comes MUTATION over NEW_OFFSPRING...
+            '''
 
-            break # for testing
+            parents = population[parents_to_mate, :]
+            population[:self.num_parents_mating, :] = parents
+            population[self.num_parents_mating:, :] = new_offspring
 
     def crossover(self, parents_indices, population):
         offspring = np.zeros(shape=(self.offspring_size, self.n), dtype=np.uint32)
@@ -93,13 +101,27 @@ class GeneticAlgorithm:
             parent2 = population[p2, :]
 
             child = self.mateParents(parent1, parent2)
-            
-            break # for testing
+            offspring[k, :] = child
 
-    def mateParents(self, parent1, parent2):
-        binary_string = np.random.randint(2, size=len(parent1))
+        return offspring
 
-        return None
+    def mateParents(self, p1, p2):
+        binary_string = np.random.randint(2, size=len(p1))
+        while np.unique(binary_string).shape[0] == 1:
+            binary_string = np.random.randint(2, size=len(p1))
+
+        temp_p1 = p1 + 1
+        temp_p2 = p2 + 1
+        # p1 += 1; p2 += 1
+
+        child = temp_p1 * binary_string
+        p2_jobs_left = temp_p2[~np.in1d(temp_p2, child)]
+        child[child == 0] = p2_jobs_left
+
+        child -= 1
+        # p1 -= 1; p2 -= 1
+
+        return child
 
 if __name__ == '__main__':
 
@@ -110,11 +132,24 @@ if __name__ == '__main__':
     # Start timer
     startTime = datetime.datetime.now()
 
-    # Schedule task with algorithm
-    # scheduledTasks, time = schedule(tasks, dueDate)
+    population_size = 20
+    num_generations = 10
 
-    GA = GeneticAlgorithm(population_size=10, num_generations=5, 
-        num_parents_mating=5, offspring_size=5, mutation_rate=0.1)
+    parents_mating_ratio = 0.5
+    num_parents_mating = int(parents_mating_ratio * population_size)
+    offspring_size = population_size - num_parents_mating
+
+    mutation_rate = 0.1
+
+    GA = GeneticAlgorithm(
+
+        population_size=population_size, 
+        num_generations=num_generations, 
+        num_parents_mating=num_parents_mating, 
+        offspring_size=offspring_size, 
+        mutation_rate=mutation_rate
+    )
+
     GA.loadInstance(n, k, h)
 
     GA.search()
