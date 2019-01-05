@@ -18,7 +18,7 @@ def saveData(tasks, processTime, elapsedTime):
 
 class GeneticAlgorithm:
 
-    def __init__(self, max_time, population_size, num_generations, 
+    def __init__(self, max_time, instance_size, population_size, num_generations, 
         num_parents_mating, offspring_size=-1, mutation_rate=0.25):
         self.population_size = population_size
         self.num_generations = num_generations
@@ -29,6 +29,7 @@ class GeneticAlgorithm:
             self.offspring_size = offspring_size
         self.mutation_rate = mutation_rate
         self.max_time = max_time
+        self.instance_size=instance_size
 
     def loadInstance(self, n, k, h):
 
@@ -47,6 +48,7 @@ class GeneticAlgorithm:
                     else:
                         for _ in range(noLines):
                             fp.readline()
+                arr.sort(key = lambda task: task[1] - task[2])
                 return np.asarray(arr, dtype=np.uint32)
 
         def calculateDueDate(tasks, h):
@@ -93,15 +95,24 @@ class GeneticAlgorithm:
 
             new_offspring = self.crossover(parents_to_mate, population)
             
-            '''
-            Here comes MUTATION over NEW_OFFSPRING...
-            '''
+            new_offspring = self.mutation(new_offspring)
 
             parents = population[parents_to_mate, :]
             population[:self.num_parents_mating, :] = parents
             population[self.num_parents_mating:, :] = new_offspring
 
         return best_so_far
+
+    def mutation(self, new_offspring):
+        no_swap = int(self.instance_size * self.mutation_rate)
+        if (no_swap < 1):
+            no_swap = 1
+        for offspring in new_offspring:
+            for _ in range(no_swap):
+                x = np.random.randint(low=0, high=self.instance_size)
+                y = np.random.randint(low=0, high=self.instance_size)
+                offspring[x], offspring[y] =  offspring[y],  offspring[x]
+        return new_offspring
 
     def crossover(self, parents_indices, population):
         offspring = np.zeros(shape=(self.offspring_size, self.n), dtype=np.uint32)
@@ -167,15 +178,16 @@ if __name__ == '__main__':
     num_parents_mating = int(parents_mating_ratio * population_size)
     offspring_size = population_size - num_parents_mating
 
-    mutation_rate = 0.1
+    mutation_rate = 0.1 
 
     GA = GeneticAlgorithm(
-        maxTime,
+        max_time=maxTime,
+        instance_size=n,
         population_size=population_size, 
         num_generations=num_generations, 
         num_parents_mating=num_parents_mating, 
         offspring_size=offspring_size, 
-        mutation_rate=mutation_rate
+        mutation_rate=mutation_rate,
     )
     GA.loadInstance(n, k, h)
 
