@@ -9,8 +9,8 @@ def schedule(tasks, dueTime):
 
 class GeneticAlgorithm:
 
-    def __init__(self, population_size, num_generations, num_parents_mating, 
-        offspring_size=-1, mutation_rate=0.25):
+    def __init__(self, population_size, num_generations, 
+        num_parents_mating, offspring_size=-1, mutation_rate=0.25):
         self.population_size = population_size
         self.num_generations = num_generations
         self.num_parents_mating = num_parents_mating
@@ -37,13 +37,14 @@ class GeneticAlgorithm:
                     else:
                         for _ in range(noLines):
                             fp.readline()
-                return np.asarray(arr, dtype=np.uint8)
+                return np.asarray(arr, dtype=np.uint32)
 
         def calculateDueDate(tasks, h):
             return np.floor(np.sum(tasks[:, 0]) * h)
 
         self.tasks = loadFromFile(n, k)
         self.dueDate = calculateDueDate(self.tasks, h)
+        self.n = n #number of tasks
 
     def calculatePenalty(self, sequence):
         penalty = 0; time = 0
@@ -57,11 +58,53 @@ class GeneticAlgorithm:
                 penalty += penaltyTime * task[1]
         return penalty
 
+    def initializePopulation(self):
+        population = np.zeros(shape=(self.population_size, self.n),
+            dtype=np.uint32)
+        for i in range(self.n):
+            population[i, :] = np.random.permutation(self.n)
+        return population
+
+    def search(self):
+        
+        population = self.initializePopulation()
+        for i in range(self.num_generations):
+
+            # Measuring the fitness of each chromosome in the population.
+            pop_scores = np.zeros(self.population_size, dtype=np.uint32)
+            for p in range(self.population_size):
+                pop_scores[p] = self.calculatePenalty(population[p, :])
+            
+            # Selecting the best parents in the population for mating.
+            parents_to_mate = np.argsort(pop_scores)[:self.num_parents_mating]
+            print(parents_to_mate)
+            self.crossover(parents_to_mate, population)
+
+            break # for testing
+
+    def crossover(self, parents_indices, population):
+        offspring = np.zeros(shape=(self.offspring_size, self.n), dtype=np.uint32)
+        num_parents = len(parents_indices)
+
+        for k in range(self.offspring_size):
+            # Indices of parents to mate.
+            p1, p2 = parents_indices[k%num_parents], parents_indices[(k+1)%num_parents]
+            parent1 = population[p1, :]
+            parent2 = population[p2, :]
+            print(parent1, parent2)
+
+            break # for testing
+
+
+
+
+
+
 if __name__ == '__main__':
 
     n = 10
     k = 1
-    h = 0.2
+    h = 0.4
 
     # Start timer
     startTime = datetime.datetime.now()
@@ -73,6 +116,7 @@ if __name__ == '__main__':
         num_parents_mating=5, offspring_size=5, mutation_rate=0.1)
     GA.loadInstance(n, k, h)
 
+    GA.search()
 
     # End timer
     endTime = datetime.datetime.now()
