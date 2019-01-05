@@ -1,12 +1,20 @@
 import datetime
 from math import floor
 from datetime import timedelta
+import sys
 
 import numpy as np
 
-def schedule(tasks, dueTime):
-    #TODO
-    return 0, 0
+def saveData(tasks, processTime, elapsedTime):
+    times = [[] for _ in range(len(tasks))]
+    time = 0
+    for task in tasks:
+        times[task[3] - 1] = time
+        time += task[0]
+    with open("result.txt", 'w') as fw:
+        fw.write(str(processTime) + '\n')
+        fw.write(str(elapsedTime) + '\n')
+        fw.write(' '.join(map(str, times)))
 
 class GeneticAlgorithm:
 
@@ -95,7 +103,6 @@ class GeneticAlgorithm:
 
         return best_so_far
 
-
     def crossover(self, parents_indices, population):
         offspring = np.zeros(shape=(self.offspring_size, self.n), dtype=np.uint32)
         num_parents = len(parents_indices)
@@ -135,9 +142,19 @@ if __name__ == '__main__':
     n = 10
     k = 1
     h = 0.4
-
     c = 10
     reserveTime = 2 #miliseconds 10^-3
+
+    arguments = sys.argv[1:]
+    if len(arguments) == 0:
+        pass
+    elif len(arguments) == 4:
+        n = int(sys.argv[1])
+        k = int(sys.argv[2])
+        h = float(sys.argv[3])
+        c = int(sys.argv[4])
+    else:
+        print("Usage: main.py n k h c")
 
     # Start timer
     startTime = datetime.datetime.now()
