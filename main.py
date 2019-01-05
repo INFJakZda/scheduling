@@ -10,8 +10,8 @@ def schedule(tasks, dueTime):
 
 class GeneticAlgorithm:
 
-    def __init__(self, population_size, num_generations, 
-        num_parents_mating, max_time, offspring_size=-1, mutation_rate=0.25):
+    def __init__(self, max_time, population_size, num_generations, 
+        num_parents_mating, offspring_size=-1, mutation_rate=0.25):
         self.population_size = population_size
         self.num_generations = num_generations
         self.num_parents_mating = num_parents_mating
@@ -63,7 +63,7 @@ class GeneticAlgorithm:
     def initializePopulation(self):
         population = np.zeros(shape=(self.population_size, self.n),
             dtype=np.uint32)
-        for i in range(self.n):
+        for i in range(self.population_size):
             population[i, :] = np.random.permutation(self.n)
         return population
 
@@ -72,7 +72,6 @@ class GeneticAlgorithm:
         population = self.initializePopulation()
 
         # for i in range(self.num_generations):
-
         while(datetime.datetime.now() < self.max_time):
             
             # Measuring the fitness of each chromosome in the population.
@@ -80,9 +79,10 @@ class GeneticAlgorithm:
             for p in range(self.population_size):
                 pop_scores[p] = self.calculatePenalty(population[p, :])
             
-            print(np.sort(pop_scores))
             # Selecting the best parents in the population for mating.
             parents_to_mate = np.argsort(pop_scores)[:self.num_parents_mating]
+            best_so_far = population[parents_to_mate[0], :]
+
             new_offspring = self.crossover(parents_to_mate, population)
             
             '''
@@ -92,6 +92,9 @@ class GeneticAlgorithm:
             parents = population[parents_to_mate, :]
             population[:self.num_parents_mating, :] = parents
             population[self.num_parents_mating:, :] = new_offspring
+
+        return best_so_far
+
 
     def crossover(self, parents_indices, population):
         offspring = np.zeros(shape=(self.offspring_size, self.n), dtype=np.uint32)
@@ -132,6 +135,7 @@ if __name__ == '__main__':
     n = 10
     k = 1
     h = 0.4
+
     c = 10
     reserveTime = 2 #miliseconds 10^-3
 
@@ -149,7 +153,7 @@ if __name__ == '__main__':
     mutation_rate = 0.1
 
     GA = GeneticAlgorithm(
-
+        maxTime,
         population_size=population_size, 
         num_generations=num_generations, 
         num_parents_mating=num_parents_mating, 
@@ -158,8 +162,14 @@ if __name__ == '__main__':
     )
     GA.loadInstance(n, k, h)
 
-    GA.search()
+    solution = GA.search()
 
     # End timer
     endTime = datetime.datetime.now()
     diffTime = endTime - startTime
+
+    print("End of search!")
+    print(diffTime)
+    print("\nSolution:")
+    print(solution)
+    print(GA.calculatePenalty(solution))
