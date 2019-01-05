@@ -1,5 +1,6 @@
 import datetime
 from math import floor
+from datetime import timedelta
 
 import numpy as np
 
@@ -10,7 +11,7 @@ def schedule(tasks, dueTime):
 class GeneticAlgorithm:
 
     def __init__(self, population_size, num_generations, 
-        num_parents_mating, offspring_size=-1, mutation_rate=0.25):
+        num_parents_mating, max_time, offspring_size=-1, mutation_rate=0.25):
         self.population_size = population_size
         self.num_generations = num_generations
         self.num_parents_mating = num_parents_mating
@@ -19,6 +20,7 @@ class GeneticAlgorithm:
         else:
             self.offspring_size = offspring_size
         self.mutation_rate = mutation_rate
+        self.max_time = max_time
 
     def loadInstance(self, n, k, h):
 
@@ -69,8 +71,10 @@ class GeneticAlgorithm:
         
         population = self.initializePopulation()
 
-        for i in range(self.num_generations):
+        # for i in range(self.num_generations):
 
+        while(datetime.datetime.now() < self.max_time):
+            
             # Measuring the fitness of each chromosome in the population.
             pop_scores = np.zeros(self.population_size, dtype=np.uint32)
             for p in range(self.population_size):
@@ -128,9 +132,12 @@ if __name__ == '__main__':
     n = 10
     k = 1
     h = 0.4
+    c = 10
+    reserveTime = 2 #miliseconds 10^-3
 
     # Start timer
     startTime = datetime.datetime.now()
+    maxTime = startTime + timedelta(milliseconds = c * n - reserveTime)
 
     population_size = 20
     num_generations = 10
@@ -149,7 +156,6 @@ if __name__ == '__main__':
         offspring_size=offspring_size, 
         mutation_rate=mutation_rate
     )
-
     GA.loadInstance(n, k, h)
 
     GA.search()
