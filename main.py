@@ -40,13 +40,15 @@ class GeneticAlgorithm:
                             fp.readline()
                 helper = arr.copy()
                 helper.sort(key = lambda task: task[1] - task[2])
-                sorted_indexes = [ele[3] - 1 for ele in helper]
-                return np.asarray(arr, dtype=np.uint32), np.asarray(sorted_indexes, dtype=np.uint32)
+                sorted_indexes_subtract = [ele[3] - 1 for ele in helper]
+                helper.sort(key = lambda task: task[1] / task[2])
+                sorted_indexes_division = [ele[3] - 1 for ele in helper]
+                return np.asarray(arr, dtype=np.uint32), np.asarray(sorted_indexes_subtract, dtype=np.uint32), np.asarray(sorted_indexes_division, dtype=np.uint32)
 
         def calculateDueDate(tasks, h):
             return np.floor(np.sum(tasks[:, 0]) * h)
             
-        self.tasks, self.sorted_indexes = loadFromFile(n, k)
+        self.tasks, self.sorted_indexes_subtract, self.sorted_indexes_division = loadFromFile(n, k)
         self.dueDate = calculateDueDate(self.tasks, h)
         self.n = n #number of tasks
 
@@ -65,9 +67,10 @@ class GeneticAlgorithm:
     def initializePopulation(self):
         population = np.zeros(shape=(self.population_size, self.n),
             dtype=np.uint32)
-        for i in range(self.population_size - 1):
+        for i in range(1, self.population_size - 1):
             population[i, :] = np.random.permutation(self.n)
-        population[self.population_size - 1, :] = self.sorted_indexes
+        population[0, :] = self.sorted_indexes_division
+        population[self.population_size - 1, :] = self.sorted_indexes_subtract
         return population
 
     def search(self):
