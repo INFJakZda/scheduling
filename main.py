@@ -19,7 +19,7 @@ def saveData(tasks, processTime, elapsedTime):
 class GeneticAlgorithm:
 
     def __init__(self, max_time, instance_size, population_size, num_generations, 
-        num_parents_mating, offspring_size=-1, mutation_rate=0.25):
+        num_parents_mating, offspring_size=-1, mutation_rate=0.25, mutation_width_coef=0.1):
         self.population_size = population_size
         self.num_generations = num_generations
         self.num_parents_mating = num_parents_mating
@@ -30,6 +30,7 @@ class GeneticAlgorithm:
         self.mutation_rate = mutation_rate
         self.max_time = max_time
         self.instance_size=instance_size
+        self.mutation_width_coef = mutation_width_coef
 
     def loadInstance(self, n, k, h):
 
@@ -97,25 +98,44 @@ class GeneticAlgorithm:
             best_so_far = population[parents_to_mate[0], :]
 
             new_offspring = self.crossover(parents_to_mate, population)
-            
             new_offspring = self.mutation(new_offspring)
 
             parents = population[parents_to_mate, :]
             population[:self.num_parents_mating, :] = parents
             population[self.num_parents_mating:, :] = new_offspring
+
             print(self.calculatePenalty(best_so_far))
 
         return best_so_far
 
     def mutation(self, new_offspring):
-        no_swap = int(self.instance_size * self.mutation_rate)
-        if (no_swap < 1):
-            no_swap = 1
-        for offspring in new_offspring:
-            for _ in range(no_swap):
-                x = np.random.randint(low=0, high=self.instance_size)
-                y = np.random.randint(low=0, high=self.instance_size)
-                offspring[x], offspring[y] =  offspring[y],  offspring[x]
+        no_mutants = int(np.ceil(self.instance_size * self.mutation_rate))
+        mutation_width = int(np.ceil(self.n * self.mutation_width_coef))
+
+        select_mutants = np.zeros(self.offspring_size, dtype=np.uint32)
+        select_mutants[:no_mutants] = 1
+        np.random.shuffle(select_mutants)
+        mutants_indices = np.nonzero(select_mutants)[0]
+
+        for m in mutants_indices:
+            child = new_offspring[m, :]
+            x = np.random.randint(low=0, high=self.instance_size - mutation_width + 1)
+            if x > self.n / 2:
+                y = np.random.randint(low=0, high=x-mutation_width-1)
+            else:
+                y = np.random.randint(low=x+mutation_width, high=self.instance_size - mutation_width + 1)
+
+            slice1 = child[x : x+mutation_width].copy()
+            slice2 = child[y : y+mutation_width].copy()
+
+            child[x : x+mutation_width] = slice2
+            child[y : y+mutation_width] = slice1
+
+            if len(np.unique(child)) != self.n:
+                print("bad mutation!")
+            else:
+                new_offspring[m, :] = child
+
         return new_offspring
 
     def crossover(self, parents_indices, population):
@@ -175,14 +195,15 @@ if __name__ == '__main__':
     startTime = datetime.datetime.now()
     maxTime = startTime + timedelta(milliseconds = c * n - reserveTime)
 
-    population_size = 20
+    population_size = 10
     num_generations = 10
 
     parents_mating_ratio = 0.5
     num_parents_mating = int(parents_mating_ratio * population_size)
     offspring_size = population_size - num_parents_mating
 
-    mutation_rate = 0.1 
+    mutation_rate = 0.2
+    mutation_width_coef = 0.1
 
     GA = GeneticAlgorithm(
         max_time=maxTime,
@@ -192,6 +213,7 @@ if __name__ == '__main__':
         num_parents_mating=num_parents_mating, 
         offspring_size=offspring_size, 
         mutation_rate=mutation_rate,
+        mutation_width_coef=mutation_width_coef
     )
     GA.loadInstance(n, k, h)
 
