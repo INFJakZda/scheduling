@@ -1,20 +1,10 @@
 import datetime
 from math import floor
+from math import log
 from datetime import timedelta
 import sys
 
 import numpy as np
-
-def saveData(tasks, processTime, elapsedTime):
-    times = [[] for _ in range(len(tasks))]
-    time = 0
-    for task in tasks:
-        times[task[3] - 1] = time
-        time += task[0]
-    with open("result.txt", 'w') as fw:
-        fw.write(str(processTime) + '\n')
-        fw.write(str(elapsedTime) + '\n')
-        fw.write(' '.join(map(str, times)))
 
 class GeneticAlgorithm:
 
@@ -55,7 +45,7 @@ class GeneticAlgorithm:
 
         def calculateDueDate(tasks, h):
             return np.floor(np.sum(tasks[:, 0]) * h)
-
+            
         self.tasks, self.sorted_indexes = loadFromFile(n, k)
         self.dueDate = calculateDueDate(self.tasks, h)
         self.n = n #number of tasks
@@ -152,13 +142,26 @@ class GeneticAlgorithm:
 
         return child
 
+def saveData(tasks, solution, processTime, elapsedTime):
+    times = [[] for _ in range(len(tasks))]
+    time = 0
+    for idx in solution:
+        times[idx] = time
+        time += tasks[idx][0]
+    print(time)
+    with open("wynik.txt", 'w') as fw:
+        fw.write(str(int(processTime)) + '\n')
+        fw.write(str(elapsedTime) + '\n')
+        fw.write(' '.join(map(str, times)))
+
+
 if __name__ == '__main__':
 
     n = 10
     k = 1
     h = 0.4
     c = 10
-    reserveTime = 2 #miliseconds 10^-3
+    reserveTime = n / int(log(n, 2))
 
     arguments = sys.argv[1:]
     if len(arguments) == 0:
@@ -206,3 +209,4 @@ if __name__ == '__main__':
     print("\nSolution:")
     print(solution)
     print(GA.calculatePenalty(solution))
+    saveData(GA.tasks, solution, GA.calculatePenalty(solution), round(diffTime.total_seconds() * 1000000))
