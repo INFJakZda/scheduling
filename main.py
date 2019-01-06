@@ -181,20 +181,20 @@ if __name__ == '__main__':
     startTime = datetime.datetime.now()
     maxTime = startTime + timedelta(milliseconds = c * n - reserveTime)
 
-    population_size = 20
+    population_size = 5
     num_generations = 10
 
     parents_mating_ratio = 0.5
     num_parents_mating = int(parents_mating_ratio * population_size)
     offspring_size = population_size - num_parents_mating
 
-    mutation_rate = 0.1 
+    mutation_rate = 0.003 
 
     GA = GeneticAlgorithm(
         max_time=maxTime,
         instance_size=n,
-        population_size=population_size, 
-        num_generations=num_generations, 
+        population_size=population_size,
+        num_generations=num_generations,
         num_parents_mating=num_parents_mating, 
         offspring_size=offspring_size, 
         mutation_rate=mutation_rate,
